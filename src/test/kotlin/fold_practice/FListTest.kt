@@ -1,5 +1,6 @@
 package fold_practice
 
+import fold_practice.FList.Nil.foldRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -48,5 +49,17 @@ class FListTest : FunSpec({
         val list1 = FList.of(1, 2, 3, 4)
 
         list1.init() shouldBe FList.of(1, 2, 3)
+    }
+
+    test("foldRight") {
+        val list1 = FList.of(1, 2, 3, 4)
+
+        list1.foldRight(0) { a, b -> a + b } shouldBe 10
+    }
+
+    test("foldLeft") {
+        val list1 = FList.of(1, 2, 3, 4)
+
+        list1.foldLeft(0) { a, b -> a + b } shouldBe 10
     }
 })

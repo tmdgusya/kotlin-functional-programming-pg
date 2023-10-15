@@ -1,5 +1,6 @@
 package fold_practice
 
+import chapter3.Cons
 import fold_practice.FList.*
 
 
@@ -34,8 +35,10 @@ sealed class FList<out A> {
         is FCons -> if (condition(head)) drop(1).dropWhile(condition) else this
     }
 
-    // I think this just do dropping array and appending array repeatedly
-
+    fun <A, B> FList<A>.foldRight(acc: B, map: (A, B) -> B): B = when (this) {
+        is Nil -> acc
+        is FCons -> map(head, tail.foldRight(acc, map))
+    }
 }
 
 operator fun <A> FList<A>.plus(other: FList<A>): FList<A> = when (this) {
@@ -48,7 +51,7 @@ fun <A> FList<A>.append1(other: FList<A>): FList<A> = when (this) {
     is FCons -> FCons(head, tail.append1(other))
 }
 
-tailrec fun <A> FList<A>._init(acc: FList<A>): FList<A> = when (this) {
+private tailrec fun <A> FList<A>._init(acc: FList<A>): FList<A> = when (this) {
     is Nil -> this
     is FCons<A> -> if (this.tail == Nil) acc else tail._init(acc + FCons(head, Nil))
 }
@@ -56,4 +59,9 @@ tailrec fun <A> FList<A>._init(acc: FList<A>): FList<A> = when (this) {
 fun <A> FList<A>.init(): FList<A> = when (this) {
     is Nil -> Nil
     is FCons -> tail._init(FCons(head, Nil as FList<A>))
+}
+
+tailrec fun <A, B> FList<A>.foldLeft(acc: B, map: (B, A) -> B): B = when (this) {
+    is Nil -> acc
+    is FCons -> tail.foldLeft(map(acc, head), map)
 }
