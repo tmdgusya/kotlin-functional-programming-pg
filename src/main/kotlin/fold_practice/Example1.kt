@@ -1,5 +1,6 @@
 package fold_practice
 
+import chapter04.Option
 import chapter3.Cons
 import fold_practice.FList.*
 
@@ -13,6 +14,8 @@ sealed class FList<out A> {
             val tail = elements.sliceArray(1..<elements.size)
             return if (elements.isEmpty()) Nil else FCons(elements[0], FList.of(*tail))
         }
+        operator fun <A> invoke(a: A, b: FList<A>): FList<A> = FCons(a, b)
+        operator fun <A> invoke(): FList<A> = Nil
     }
 
     fun tail(): FList<A> = when (this) {
