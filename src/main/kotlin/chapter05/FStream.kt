@@ -77,6 +77,37 @@ fun <A> FStream<A>.dropWhile(p: (A) -> Boolean): FStream<A> = when (this) {
 // Example 5.4
 fun <A> FStream<A>.forAll(p: (A) -> Boolean): Boolean = this.foldRight({ true }, {a , b -> p(a) && b() })
 
+// Example 5.5
+fun <A> FStream<A>.takeWhile(p: (A) -> Boolean): FStream<A> = this.foldRight({ FStream() }) { a: A, b: () -> FStream<A> ->
+    when (this) {
+        is Empty -> FStream()
+        is Cons -> lazyIf(p(a), onTrue = { FStream(head) { tail().takeWhile(p) } }, onFalse = { b() })
+    }
+}
+
+// Example 5.6
+
+
+// Example 5.7
+fun <A, B> FStream<A>.map(func: (A) -> B): FStream<B> = when (this) {
+    is Empty -> FStream()
+    is Cons -> FStream({ func(head()) }, { tail().map(func) })
+}
+
+fun <A> FStream<A>.filter(cond: (A) -> Boolean): FStream<A> = when (this) {
+    is Empty -> FStream()
+    is Cons -> lazyIf(
+        cond = cond(head()),
+        onTrue = { FStream(head) { tail().filter(cond) } },
+        onFalse = { tail().filter(cond) }
+    )
+}
+
+fun <A> FStream<A>.append(other: () -> FStream<A>): FStream<A> = when (this) {
+    is Empty -> other()
+    is Cons -> FStream(head, other)
+}
+
 
 fun main() {
     val fstream: FStream<Int> = FStream.of(1, 2, 3, 4, 5)
@@ -84,6 +115,9 @@ fun main() {
     println(fstream.take(4).toList())
     println(fstream.drop(2).toList())
     println(fstream.dropWhile { it % 2 == 1 }.toList())
+    println(fstream.takeWhile { it < 4 }.toList())
     println(fstream.exist { it == 2 })
     println(fstream.forAll { it == 3 })
+    println(fstream.map { it * 2 }.toList())
+    println(fstream.filter { it % 2 == 1 }.toList())
 }
