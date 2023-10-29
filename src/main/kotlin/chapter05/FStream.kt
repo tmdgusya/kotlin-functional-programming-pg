@@ -1,6 +1,7 @@
 package chapter05
 
 import chapter04.Option
+import chapter3.foldRight
 import fold_practice.FList
 
 sealed class FStream<out A> {
@@ -32,6 +33,19 @@ fun <A> FStream<A>.headOption(): Option<A> = when (this) {
     is Cons -> Option.Some(head())
 }
 
+fun <A, B> FStream<A>.foldRight(
+    z: () -> B,
+    f: (A, () -> B) -> B
+): B = when (this) {
+    is Cons -> f(this.head()) {
+        tail().foldRight(z, f)
+    }
+
+    is Empty -> z()
+}
+
+fun <A> FStream<A>.exist(p: (A) -> Boolean): Boolean = this.foldRight({ false }, { a, b -> p(a) || b() })
+
 
 // Example 5.1
 fun <A> FStream<A>.toList(): FList<A> = when (this) {
@@ -60,6 +74,9 @@ fun <A> FStream<A>.dropWhile(p: (A) -> Boolean): FStream<A> = when (this) {
         onFalse = { this.tail().dropWhile(p) })
 }
 
+// Example 5.4
+fun <A> FStream<A>.forAll(p: (A) -> Boolean): Boolean = this.foldRight({ true }, {a , b -> p(a) && b() })
+
 
 fun main() {
     val fstream: FStream<Int> = FStream.of(1, 2, 3, 4, 5)
@@ -67,4 +84,6 @@ fun main() {
     println(fstream.take(4).toList())
     println(fstream.drop(2).toList())
     println(fstream.dropWhile { it % 2 == 1 }.toList())
+    println(fstream.exist { it == 2 })
+    println(fstream.forAll { it == 3 })
 }
