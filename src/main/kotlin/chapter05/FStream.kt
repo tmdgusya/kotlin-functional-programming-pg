@@ -2,7 +2,6 @@ package chapter05
 
 import chapter04.Option
 import fold_practice.FList
-import kotlin.math.E
 
 sealed class FStream<out A> {
     companion object {
@@ -52,10 +51,15 @@ fun <A> FStream<A>.drop(n: Int): FStream<A> = when (this) {
 }
 
 // Example 5.3
+
 fun <A> FStream<A>.dropWhile(p: (A) -> Boolean): FStream<A> = when (this) {
     is Empty -> this
-    is Cons -> if (p(head())) FStream(head) { this.tail().dropWhile(p) } else this.tail().dropWhile(p)
+    is Cons -> lazyIf(
+        cond = p(head()),
+        onTrue = { FStream(head) { this.tail().dropWhile(p) } },
+        onFalse = { this.tail().dropWhile(p) })
 }
+
 
 fun main() {
     val fstream: FStream<Int> = FStream.of(1, 2, 3, 4, 5)
