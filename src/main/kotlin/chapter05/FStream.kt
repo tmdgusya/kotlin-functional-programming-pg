@@ -46,6 +46,9 @@ fun <A, B> FStream<A>.foldRight(
 
 fun <A> FStream<A>.exist(p: (A) -> Boolean): Boolean = this.foldRight({ false }, { a, b -> p(a) || b() })
 
+// infinite stream
+fun ones(): FStream<Int> = FStream({ 1 }, { ones() })
+
 
 // Example 5.1
 fun <A> FStream<A>.toList(): FList<A> = when (this) {
@@ -108,6 +111,28 @@ fun <A> FStream<A>.append(other: () -> FStream<A>): FStream<A> = when (this) {
     is Cons -> FStream(head, other)
 }
 
+fun <A> generateSequence(a: () -> A): FStream<A> = FStream({ a() }, { generateSequence(a) })
+
+fun <A> generateSequence(a: () -> A, thunk: (acc: A) -> A): FStream<A> =
+    FStream({ a() }, { generateSequence({ thunk(a()) }, thunk) })
+
+// Example 5.8
+fun <A> constant(a: A): FStream<A> = generateSequence { a }
+
+// Example 5.9
+fun from(n: Int): FStream<Int> = generateSequence({ n }) { it + 1 }
+
+// Example 5.10
+fun fibs(): FStream<Int> {
+    fun go(curr: Int, next: Int): FStream<Int> = FStream({curr}, {go(next, curr + next)})
+    return go(0, 1)
+}
+
+fun fibs2(): FStream<Int> {
+    fun go(curr: Int, next: Int): FStream<Int> = generateSequence({ curr }) { curr + next }
+    return go(0, 1)
+}
+
 
 fun main() {
     val fstream: FStream<Int> = FStream.of(1, 2, 3, 4, 5)
@@ -120,4 +145,6 @@ fun main() {
     println(fstream.forAll { it == 3 })
     println(fstream.map { it * 2 }.toList())
     println(fstream.filter { it % 2 == 1 }.toList())
+    println(from(0).take(4).toList())
+    println(fibs().take(10).toList())
 }
