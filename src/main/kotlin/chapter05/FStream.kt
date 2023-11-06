@@ -124,15 +124,26 @@ fun from(n: Int): FStream<Int> = generateSequence({ n }) { it + 1 }
 
 // Example 5.10
 fun fibs(): FStream<Int> {
-    fun go(curr: Int, next: Int): FStream<Int> = FStream({curr}, {go(next, curr + next)})
-    return go(0, 1)
-}
-
-fun fibs2(): FStream<Int> {
     fun go(curr: Int, next: Int): FStream<Int> = generateSequence({ curr }) { curr + next }
     return go(0, 1)
 }
 
+// Example 5.11
+fun <A, S> unfold(z: S, f: (S) -> Option<Pair<A, S>>): FStream<A> = f(z).map { pair ->
+    FStream({ pair.first },
+        { unfold(pair.second, f) })
+}.getOrElse { FStream() }
+
+// Example 5.12
+fun from2(n: Int): FStream<Int> = unfold(n) { a -> Option.Some(a to a + 1) }
+
+// Example 5.13
+fun <A, B> FStream<A>.map2(f: (A) -> B): FStream<B> = unfold(this) { s ->
+    when (s) {
+        is Cons -> Option.Some(f(s.head()) to s.tail())
+        else -> Option.None
+    }
+}
 
 fun main() {
     val fstream: FStream<Int> = FStream.of(1, 2, 3, 4, 5)
